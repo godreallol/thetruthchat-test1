@@ -45,7 +45,7 @@ GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID", "")
 GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET", "")
 BASE_URL = os.getenv("BASE_URL", "http://127.0.0.1:5000").rstrip("/")
 
-nlp = spacy.load("en_core_web_lg")
+nlp = spacy.load("en_core_web_sm")
 
 
 def make_chat(title="New chat"):
