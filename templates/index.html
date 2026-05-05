@@ -1,0 +1,1258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TheTruthChat</title>
+<link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='favicon.png') }}?v=5">
+<link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}?v=5">
+<link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='apple-touch-icon.png') }}?v=5">
+<style>
+:root {
+  color-scheme: light;
+  --app-height: 100vh;
+  --bg: #f3f6fb;
+  --sidebar: #e8eef8;
+  --sidebar-soft: rgba(59, 130, 246, 0.05);
+  --sidebar-border: rgba(15, 23, 42, 0.06);
+  --panel: #fbfcfb;
+  --panel-strong: #ffffff;
+  --panel-border: rgba(15, 23, 42, 0.08);
+  --text: #1d2a3a;
+  --muted: #6a778b;
+  --accent: #4a76b8;
+  --accent-strong: #355b94;
+  --accent-soft: #dfe9f8;
+  --line: rgba(15, 23, 42, 0.08);
+  --shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  min-height: 100%;
+  font-family: "Segoe UI", "Helvetica Neue", sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+body {
+  padding: 0;
+  overflow: hidden;
+}
+
+.app-shell {
+  width: 100%;
+  height: var(--app-height);
+  min-height: 100dvh;
+}
+
+.workspace {
+  display: grid;
+  grid-template-columns: 290px minmax(0, 1fr);
+  gap: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
+.sidebar {
+  position: relative;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 18px;
+  background: var(--sidebar);
+  color: var(--text);
+  border-right: 1px solid var(--panel-border);
+  min-height: 0;
+}
+
+.sidebar-top {
+  display: grid;
+  gap: 12px;
+}
+
+.sidebar-bottom {
+  margin-top: auto;
+}
+
+.auth-panel {
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.62);
+  border: 1px solid rgba(15, 23, 42, 0.06);
+}
+
+.auth-panel strong {
+  font-size: 0.92rem;
+}
+
+.auth-panel span {
+  color: var(--muted);
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
+.auth-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.auth-actions form {
+  width: 100%;
+  margin: 0;
+}
+
+.auth-actions a,
+.auth-actions button {
+  display: block;
+  width: 100%;
+  border-radius: 14px;
+  padding: 10px 12px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  background: #ffffff;
+  color: var(--text);
+  font: inherit;
+  font-weight: 600;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.sidebar-mark {
+  width: 54px;
+  height: 54px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  background: transparent;
+  overflow: hidden;
+}
+
+.logo-mark {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: contain;
+}
+
+.sidebar-copy strong,
+.sidebar-copy span {
+  display: block;
+}
+
+.sidebar-copy strong {
+  font-size: 0.98rem;
+}
+
+.sidebar-copy span {
+  color: var(--muted);
+  font-size: 0.84rem;
+}
+
+.new-chat-form {
+  margin: 0;
+}
+
+.new-chat-button {
+  width: 100%;
+  border: 0;
+  border-radius: 18px;
+  padding: 12px 14px;
+  background: #ffffff;
+  color: var(--text);
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  border: 1px solid var(--panel-border);
+}
+
+.sidebar-meta {
+  padding: 10px 12px;
+  border-radius: 18px;
+  background: var(--sidebar-soft);
+  border: 1px solid var(--sidebar-border);
+  color: rgba(232, 241, 255, 0.76);
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+.chat-list {
+  display: grid;
+  gap: 10px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.chat-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.chat-list::-webkit-scrollbar-thumb {
+  background: rgba(15, 23, 42, 0.12);
+  border-radius: 999px;
+}
+
+.chat-link {
+  display: block;
+  padding: 12px 14px;
+  border-radius: 18px;
+  color: inherit;
+  text-decoration: none;
+  background: transparent;
+  border: 1px solid transparent;
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+}
+
+.chat-link:hover {
+  background: rgba(74, 118, 184, 0.06);
+  border-color: rgba(15, 23, 42, 0.06);
+  transform: translateY(-1px);
+}
+
+.chat-link.active {
+  background: #fdfefe;
+  border-color: rgba(74, 118, 184, 0.2);
+}
+
+.chat-link strong,
+.chat-link span {
+  display: block;
+}
+
+.chat-link strong {
+  font-size: 0.92rem;
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+.chat-link span {
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.main-panel {
+  position: relative;
+  overflow: hidden;
+  border-left: 1px solid var(--panel-border);
+  background: var(--panel);
+  box-shadow: none;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.main-panel::before {
+  content: none;
+}
+
+.chat-header {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 22px;
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--line);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.brand-copy strong,
+.brand-copy span {
+  display: block;
+}
+
+.brand-copy .mobile-brand-title {
+  display: none;
+}
+
+.brand-copy strong {
+  font-size: 0.95rem;
+}
+
+.brand-copy span {
+  color: var(--muted);
+  font-size: 0.86rem;
+}
+
+.mobile-menu-button {
+  display: none;
+  flex-direction: column;
+  width: 46px;
+  height: 46px;
+  padding: 0;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.9);
+  color: var(--text);
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+}
+
+.mobile-menu-button span {
+  display: block;
+  width: 18px;
+  height: 2px;
+  border-radius: 999px;
+  background: currentColor;
+  transition: transform 0.18s ease, opacity 0.18s ease;
+}
+
+.mobile-menu-button span + span {
+  margin-top: 4px;
+}
+
+.mobile-menu-button[aria-expanded="true"] span:nth-child(1) {
+  transform: translateY(6px) rotate(45deg);
+}
+
+.mobile-menu-button[aria-expanded="true"] span:nth-child(2) {
+  opacity: 0;
+}
+
+.mobile-menu-button[aria-expanded="true"] span:nth-child(3) {
+  transform: translateY(-6px) rotate(-45deg);
+}
+
+.sidebar-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.32);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.18s ease, visibility 0.18s ease;
+  z-index: 4;
+}
+
+.chat-body {
+  padding: 26px 22px 20px;
+  display: grid;
+  align-content: start;
+  justify-items: stretch;
+  gap: 18px;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.chat-body::-webkit-scrollbar {
+  width: 10px;
+}
+
+.chat-body::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.04);
+  border-radius: 999px;
+}
+
+.chat-body::-webkit-scrollbar-thumb {
+  background: rgba(15, 23, 42, 0.14);
+  border-radius: 999px;
+}
+
+.chat-body::-webkit-scrollbar-thumb:hover {
+  background: rgba(15, 23, 42, 0.2);
+}
+
+.empty-state {
+  min-height: calc(100vh - 260px);
+  display: grid;
+  place-items: center;
+  padding: 28px;
+}
+
+.empty-card {
+  width: min(520px, 100%);
+  padding: 28px;
+  border-radius: 24px;
+  background: #ffffff;
+  border: 1px solid rgba(15, 23, 42, 0.06);
+  text-align: center;
+}
+
+.empty-card h2 {
+  margin: 0 0 10px;
+  font-size: 1.4rem;
+  letter-spacing: -0.03em;
+}
+
+.empty-card p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.chat-entry {
+  display: grid;
+  align-content: start;
+  gap: 10px;
+}
+
+.message-row {
+  display: grid;
+  grid-template-columns: 38px minmax(0, 760px);
+  align-items: flex-start;
+  column-gap: 12px;
+}
+
+.message-row.user {
+  width: fit-content;
+  max-width: 100%;
+  margin-left: auto;
+  display: flex;
+  justify-content: flex-end;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.avatar {
+  width: 38px;
+  height: 38px;
+  flex: 0 0 auto;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+.avatar.user {
+  order: 2;
+  background: #dbe7fb;
+  color: #35527f;
+}
+
+.avatar.bot {
+  grid-column: 1;
+  padding: 0;
+  background: transparent;
+  overflow: hidden;
+}
+
+.message-card {
+  width: 100%;
+  border-radius: 22px;
+  border: 1px solid rgba(15, 23, 42, 0.06);
+  padding: 16px 18px;
+  box-shadow: none;
+}
+
+.message-row.user .message-card {
+  order: 1;
+  width: auto;
+  max-width: min(700px, calc(100% - 50px));
+  background: #edf3fd;
+  color: var(--text);
+}
+
+.message-row.bot .message-card {
+  border-color: rgba(74, 118, 184, 0.14);
+  grid-column: 2;
+  background: #f2f7ff;
+}
+
+.message-content {
+  margin: 0;
+  line-height: 1.65;
+  word-break: break-word;
+}
+
+.bot-answer {
+  display: grid;
+  gap: 6px;
+}
+
+.answer-line {
+  position: relative;
+  margin-bottom: 0.15rem;
+  line-height: 1.75;
+}
+
+.answer-line .highlight-range {
+  position: absolute;
+  background: #c9daf6;
+  border-radius: 8px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.answer-line .highlight-range.highlight-range-attention {
+  background: #b4cbf3;
+}
+
+.answer-line .word-token {
+  z-index: 1;
+}
+
+.word-token {
+  position: relative;
+  display: inline-block;
+  cursor: default;
+}
+
+.word-token .tooltip {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 8px);
+  transform: translateX(-50%);
+  background: #111827;
+  color: #f9fafb;
+  padding: 4px 8px;
+  border-radius: 8px;
+  font-size: 12px;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.05s linear;
+  pointer-events: none;
+  z-index: 10;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.18);
+}
+
+.word-token:hover .tooltip {
+  opacity: 1;
+  visibility: visible;
+}
+
+.bot-answer .word-token:hover {
+  text-decoration: underline;
+}
+
+.composer-wrap {
+  position: sticky;
+  bottom: 0;
+  z-index: 4;
+  margin-top: auto;
+  padding: 18px 22px 22px;
+  background: linear-gradient(180deg, rgba(251, 251, 252, 0) 0%, rgba(251, 251, 252, 0.94) 18%, rgba(251, 251, 252, 1) 100%);
+}
+
+.composer {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px;
+  border-radius: 24px;
+  background: var(--panel-strong);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  box-shadow: none;
+}
+
+.composer input {
+  width: 100%;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--text);
+  padding: 12px 14px;
+  font-size: 1rem;
+  appearance: none;
+  -webkit-appearance: none;
+  box-shadow: none;
+}
+
+.composer input::placeholder {
+  color: #8b97ab;
+}
+
+.composer input:-webkit-autofill,
+.composer input:-webkit-autofill:hover,
+.composer input:-webkit-autofill:focus,
+.composer input:-webkit-autofill:active {
+  -webkit-text-fill-color: var(--text);
+  transition: background-color 9999s ease-in-out 0s;
+  -webkit-box-shadow: 0 0 0 1000px var(--panel-strong) inset;
+  box-shadow: 0 0 0 1000px var(--panel-strong) inset;
+  caret-color: var(--text);
+}
+
+.composer input::selection {
+  background: rgba(74, 118, 184, 0.18);
+}
+
+.composer input:focus {
+  outline: none;
+  box-shadow: none;
+  border: 0;
+}
+
+.composer:focus-within {
+  border-color: rgba(15, 23, 42, 0.12);
+  box-shadow: none;
+}
+
+.composer button {
+  border: 0;
+  border-radius: 18px;
+  padding: 12px 18px;
+  background: #111827;
+  color: #f9fafb;
+  font-weight: 700;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+
+.composer button:hover {
+  transform: translateY(-1px);
+  background: #1f2937;
+}
+
+.composer button:active {
+  transform: translateY(0);
+}
+
+.footer-note {
+  margin-top: 12px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.footer-note a {
+  color: #3b82f6;
+  text-decoration: none;
+}
+
+.footer-note a:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 980px) {
+  .workspace {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar {
+    position: fixed;
+    inset: 0 auto 0 0;
+    width: min(320px, calc(100vw - 44px));
+    max-width: 100%;
+    min-height: 100dvh;
+    border-right: 1px solid var(--panel-border);
+    box-shadow: 0 18px 40px rgba(15, 23, 42, 0.18);
+    transform: translateX(-100%);
+    transition: transform 0.22s ease;
+    overflow-y: auto;
+  }
+
+  .chat-list {
+    max-height: none;
+  }
+
+  body.sidebar-open .sidebar {
+    transform: translateX(0);
+  }
+
+  body.sidebar-open .sidebar-backdrop {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+  }
+
+  .mobile-menu-button {
+    display: inline-flex;
+  }
+
+  .chat-header {
+    min-height: 76px;
+  }
+}
+
+@media (max-width: 980px) {
+  body {
+    padding: 0;
+  }
+
+  .chat-header,
+  .chat-body,
+  .composer-wrap {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+
+  .chat-header {
+    align-items: center;
+    flex-direction: row;
+    justify-content: flex-start;
+    gap: 12px;
+    padding-top: max(8px, env(safe-area-inset-top, 0px) + 2px);
+  }
+
+  .status-pill {
+    align-self: flex-start;
+  }
+
+  .brand-copy {
+    min-width: 0;
+  }
+
+  .brand-copy .mobile-brand-title {
+    display: block;
+    color: var(--muted);
+    font-size: 1.12rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+
+  #active-chat-title {
+    display: none;
+  }
+
+  .brand-copy strong {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .chat-body {
+    padding-top: 18px;
+  }
+
+  .composer-wrap {
+    padding-bottom: calc(18px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .message-card {
+    max-width: 100%;
+    padding: 14px;
+  }
+
+  .composer {
+    align-items: stretch;
+    flex-direction: column;
+    border-radius: 20px;
+  }
+
+  .composer button {
+    width: 100%;
+  }
+}
+</style>
+</head>
+<body data-guest-mode="{{ '1' if not current_user else '0' }}">
+<div class="app-shell">
+  <button class="sidebar-backdrop" id="sidebar-backdrop" type="button" aria-label="Close sidebar"></button>
+  <div class="workspace">
+    <aside class="sidebar" id="sidebar" aria-label="Chat sidebar">
+      <div class="sidebar-top">
+        <div class="sidebar-brand">
+          <div class="sidebar-mark">
+            <img class="logo-mark" src="{{ url_for('static', filename='logo.png') }}?v=2" alt="TheTruthChat">
+          </div>
+          
+          <div class="sidebar-copy">
+            <strong>TheTruthChat</strong>
+          </div>
+        </div>
+
+        <form class="new-chat-form" id="new-chat-form" action="/chats/new" method="post">
+          <button class="new-chat-button" type="submit">+ New chat</button>
+        </form>
+      </div>
+
+      <div class="chat-list" id="chat-list">
+        {% for chat in chats %}
+          <a class="chat-link{% if chat.id == active_chat_id %} active{% endif %}" href="/?chat={{ chat.id }}">
+            <strong>{{ chat.title }}</strong>
+            <span>{{ chat.history|length }} message{% if chat.history|length != 1 %}s{% endif %}</span>
+          </a>
+        {% endfor %}
+      </div>
+
+      <div class="sidebar-bottom">
+        <div class="auth-panel">
+          {% if current_user %}
+            <strong>{{ current_user.name }}</strong>
+            <span>{{ current_user.email }}</span>
+            <div class="auth-actions">
+              <form action="/logout" method="post">
+                <button type="submit">Log out</button>
+              </form>
+            </div>
+          {% else %}
+            <strong>Sign in with Google</strong>
+            {% if google_login_ready %}
+              <span>Save chats to your account and keep them across reloads.</span>
+              <div class="auth-actions">
+                <a href="/auth/google">Continue with Google</a>
+              </div>
+            {% endif %}
+          {% endif %}
+        </div>
+      </div>
+    </aside>
+
+    <main class="main-panel">
+      <div class="chat-header">
+        <button class="mobile-menu-button" id="mobile-menu-button" type="button" aria-label="Open sidebar" aria-controls="sidebar" aria-expanded="false">
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
+        <div class="brand-copy">
+          <span class="mobile-brand-title">TheTruthChat</span>
+          <strong id="active-chat-title">{{ active_chat.title }}</strong>
+        </div>
+      </div>
+
+      <div class="chat-body" id="chat-body">
+        {% set tag_map = {"v": "VERB", "g": "GERUND", "n": "NOUN", "d": "DETERMINER", "adj": "ADJECTIVE", "adv": "ADVERB", "prp": "PREPOSITION", "pro": "PRONOUN", "c": "CONJUNCTION", "pu": "PUNCTUATION", "spu": "PUNCTUATION", "pus": "PUNCTUATION"} %}
+        {% if history %}
+          {% for q, a in history %}
+            <section class="chat-entry">
+              <div class="message-row user">
+                <div class="avatar user">You</div>
+                <article class="message-card">
+                  <p class="message-content">{{ q }}</p>
+                </article>
+              </div>
+
+              <div class="message-row bot">
+                <div class="avatar bot"><img class="logo-mark" src="{{ url_for('static', filename='logo.png') }}?v=2" alt="TheTruthChat"></div>
+                <article class="message-card">
+                  <div class="bot-answer">
+                    {% for line in a %}
+                      {% set words = line[0] %}
+                      {% set tags = line[1] %}
+                      {% if tags|length == 1 and tags[0] == 'spacer' %}
+                        <div class="answer-line">{{ words | join(' ') }}</div>
+                      {% else %}
+                        <div class="answer-line">{%- for word in words -%}{%- set raw_tag = tags[loop.index0] if loop.index0 < tags|length else '' -%}{%- set prev_word = words[loop.index0 - 1] if loop.index0 > 0 else '' -%}{%- set prev_tag = tags[loop.index0 - 1] if loop.index0 > 0 and (loop.index0 - 1) < tags|length else '' -%}{%- set next_word = words[loop.index0 + 1] if loop.index0 + 1 < words|length else '' -%}{%- set next_tag = tags[loop.index0 + 1] if loop.index0 + 1 < tags|length else '' -%}{%- set prev_tag_name = prev_tag[0] if prev_tag is sequence and prev_tag is not string and prev_tag|length > 0 else prev_tag -%}{%- set next_tag_name = next_tag[0] if next_tag is sequence and next_tag is not string and next_tag|length > 0 else next_tag -%}{%- set tag_name = raw_tag[0] if raw_tag is sequence and raw_tag is not string and raw_tag|length > 0 else raw_tag -%}{%- set tag_target_a = raw_tag[1] if raw_tag is sequence and raw_tag is not string and raw_tag|length > 1 else '' -%}{%- set tag_target_b = raw_tag[2] if raw_tag is sequence and raw_tag is not string and raw_tag|length > 2 else '' -%}{%- set tag_target = tag_target_a -%}{%- if tag_target_a != '' and tag_target_b != '' and tag_target_a[0] != tag_target_b[0] -%}{%- set tag_target = tag_target_a ~ ',' ~ tag_target_b -%}{%- endif -%}{%- set prev_allows_after = true -%}{%- if prev_tag_name == 'spu' -%}{%- set prev_allows_after = false -%}{%- elif prev_tag_name == 'pus' -%}{%- set prev_allows_after = true -%}{%- elif prev_word == '(' -%}{%- set prev_allows_after = false -%}{%- endif -%}{%- set current_allows_before = true -%}{%- if word in [')', ',', ':-'] -%}{%- set current_allows_before = false -%}{%- endif -%}{%- if tag_name == 'spu' -%}{%- set needs_leading_space = not loop.first -%}{%- elif tag_name == 'pus' -%}{%- set needs_leading_space = false -%}{%- else -%}{%- set needs_leading_space = (not loop.first) and prev_allows_after and current_allows_before -%}{%- endif -%}{%- set current_allows_after = true -%}{%- if tag_name == 'spu' -%}{%- set current_allows_after = false -%}{%- elif tag_name == 'pus' -%}{%- set current_allows_after = true -%}{%- elif word == '(' -%}{%- set current_allows_after = false -%}{%- endif -%}{%- set next_allows_before = true -%}{%- if next_word in [')', ',', ':-'] -%}{%- set next_allows_before = false -%}{%- endif -%}{%- if next_tag_name == 'spu' -%}{%- set needs_trailing_space = false -%}{%- elif next_tag_name == 'pus' -%}{%- set needs_trailing_space = current_allows_after -%}{%- else -%}{%- set needs_trailing_space = (loop.index0 + 1 < words|length) and current_allows_after and next_allows_before -%}{%- endif -%}{{- ' ' if needs_leading_space else '' -}}<span class="word-token" data-word-index="{{ loop.index0 }}" data-needs-trailing-space="{{ 1 if needs_trailing_space else 0 }}"{% if tag_target != '' %} data-highlight-target="{{ tag_target }}"{% endif %}>{{- word -}}{%- if tag_name -%}<span class="tooltip">{{- tag_map.get(tag_name, tag_name|upper) -}}</span>{%- endif -%}</span>{%- endfor -%}</div>
+                      {% endif %}
+                    {% endfor %}
+                  </div>
+                </article>
+              </div>
+            </section>
+          {% endfor %}
+        {% else %}
+          <div class="empty-state">
+            <div class="empty-card">
+              <h2>Start with a new question...</h2>
+              <p>Ask anything you want and get a fresh answer right here.</p>
+            </div>
+          </div>
+        {% endif %}
+      </div>
+
+      <div class="composer-wrap">
+        <form class="composer" id="chat-form" action="/ask" method="post">
+          <input type="hidden" id="chat-id-input" name="chat_id" value="{{ active_chat_id }}">
+          <input type="text" id="question-input" name="question" placeholder="Ask literally anything" required>
+          <button type="submit">Send</button>
+        </form>
+        <div class="footer-note">The Chatbot is in development, feedback through <a href="https://discord.gg/dUAuFqucxe" target="_blank" rel="noreferrer">social media</a> is appreciated</div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script id="initial-state" type="application/json">{{ {"chats": chats, "active_chat_id": active_chat_id, "active_chat": active_chat, "history": history}|tojson|safe|replace("</", "<\\/") }}</script>
+<script>
+(function () {
+  const tagMap = {"v": "VERB", "g": "GERUND", "n": "NOUN", "d": "DETERMINER", "adj": "ADJECTIVE", "adv": "ADVERB", "prp": "PREPOSITION", "pro": "PRONOUN", "c": "CONJUNCTION", "pu": "PUNCTUATION", "spu": "PUNCTUATION", "pus": "PUNCTUATION"};
+  const stateNode = document.getElementById('initial-state');
+  let appState = stateNode ? JSON.parse(stateNode.textContent) : { chats: [], active_chat: { id: '', title: 'New chat', history: [] }, active_chat_id: '', history: [] };
+  const navigationEntries = window.performance && window.performance.getEntriesByType
+    ? window.performance.getEntriesByType('navigation')
+    : [];
+  const navigationType = navigationEntries.length ? navigationEntries[0].type : '';
+  const currentUrl = new URL(window.location.href);
+  const guestMode = document.body.dataset.guestMode === '1';
+  const mobileMenuButton = document.getElementById('mobile-menu-button');
+  const sidebarBackdrop = document.getElementById('sidebar-backdrop');
+  const mobileSidebarQuery = window.matchMedia('(max-width: 980px)');
+
+  function syncAppHeight() {
+    document.documentElement.style.setProperty('--app-height', window.innerHeight + 'px');
+  }
+
+  function setSidebarOpen(isOpen) {
+    document.body.classList.toggle('sidebar-open', isOpen && mobileSidebarQuery.matches);
+    if (mobileMenuButton) {
+      mobileMenuButton.setAttribute('aria-expanded', document.body.classList.contains('sidebar-open') ? 'true' : 'false');
+      mobileMenuButton.setAttribute('aria-label', document.body.classList.contains('sidebar-open') ? 'Close sidebar' : 'Open sidebar');
+    }
+  }
+
+  function closeSidebarOnMobile() {
+    if (mobileSidebarQuery.matches) {
+      setSidebarOpen(false);
+    }
+  }
+
+  if (guestMode && navigationType === 'reload' && currentUrl.searchParams.get('fresh') !== '1') {
+    currentUrl.searchParams.set('fresh', '1');
+    currentUrl.searchParams.delete('chat');
+    window.location.replace(currentUrl.toString());
+    return;
+  }
+
+  function escapeHtml(value) {
+    return String(value)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  const botAvatarHtml = '<div class="avatar bot"><img class="logo-mark" src="/static/logo.png?v=2" alt="TheTruthChat"></div>';
+  function normalizeTag(rawTag) {
+    if (Array.isArray(rawTag) && rawTag.length > 0) return rawTag[0];
+    return rawTag || '';
+  }
+
+  function buildWordMarkup(words, tags) {
+    return words.map(function (word, index) {
+      const rawTag = index < tags.length ? tags[index] : '';
+      const prevWord = index > 0 ? words[index - 1] : '';
+      const prevTag = index > 0 && (index - 1) < tags.length ? tags[index - 1] : '';
+      const nextWord = index + 1 < words.length ? words[index + 1] : '';
+      const nextTag = index + 1 < tags.length ? tags[index + 1] : '';
+      const prevTagName = normalizeTag(prevTag);
+      const nextTagName = normalizeTag(nextTag);
+      const tagName = normalizeTag(rawTag);
+      const tagTargetA = Array.isArray(rawTag) && rawTag.length > 1 ? rawTag[1] : '';
+      const tagTargetB = Array.isArray(rawTag) && rawTag.length > 2 ? rawTag[2] : '';
+      let tagTarget = tagTargetA;
+      if (tagTargetA !== '' && tagTargetB !== '' && tagTargetA[0] !== tagTargetB[0]) {
+        tagTarget = tagTargetA + ',' + tagTargetB;
+      }
+
+      let prevAllowsAfter = true;
+      if (prevTagName === 'spu') prevAllowsAfter = false;
+      else if (prevTagName === 'pus') prevAllowsAfter = true;
+      else if (prevWord === '(') prevAllowsAfter = false;
+
+      let currentAllowsBefore = true;
+      if ([')', ',', ':-'].indexOf(word) !== -1) currentAllowsBefore = false;
+
+      let needsLeadingSpace;
+      if (tagName === 'spu') needsLeadingSpace = index !== 0;
+      else if (tagName === 'pus') needsLeadingSpace = false;
+      else needsLeadingSpace = index !== 0 && prevAllowsAfter && currentAllowsBefore;
+
+      let currentAllowsAfter = true;
+      if (tagName === 'spu') currentAllowsAfter = false;
+      else if (tagName === 'pus') currentAllowsAfter = true;
+      else if (word === '(') currentAllowsAfter = false;
+
+      let nextAllowsBefore = true;
+      if ([')', ',', ':-'].indexOf(nextWord) !== -1) nextAllowsBefore = false;
+
+      let needsTrailingSpace;
+      if (nextTagName === 'spu') needsTrailingSpace = false;
+      else if (nextTagName === 'pus') needsTrailingSpace = currentAllowsAfter;
+      else needsTrailingSpace = index + 1 < words.length && currentAllowsAfter && nextAllowsBefore;
+
+      return (needsLeadingSpace ? ' ' : '') +
+        '<span class="word-token" data-word-index="' + index + '" data-needs-trailing-space="' + (needsTrailingSpace ? 1 : 0) + '"' +
+        (tagTarget !== '' ? ' data-highlight-target="' + escapeHtml(tagTarget) + '"' : '') +
+        '>' + escapeHtml(word) +
+        (tagName ? '<span class="tooltip">' + escapeHtml(tagMap[tagName] || tagName.toUpperCase()) + '</span>' : '') +
+        '</span>';
+    }).join('');
+  }
+
+  function renderHistory(history) {
+    if (!history || history.length === 0) {
+      return '<div class="empty-state"><div class="empty-card"><h2>Start with a new question...</h2><p>Ask anything you want and get a fresh answer right here.</p></div></div>';
+    }
+
+    return history.map(function (entry) {
+      const q = Array.isArray(entry) ? entry[0] : '';
+      const answer = Array.isArray(entry) && Array.isArray(entry[1]) ? entry[1] : [[['Answer could not be displayed.'], ['n']]];
+      const answerHtml = answer.map(function (line) {
+        const words = Array.isArray(line) && Array.isArray(line[0]) ? line[0] : ['Answer could not be displayed.'];
+        const tags = Array.isArray(line) && Array.isArray(line[1]) ? line[1] : ['n'];
+        if (tags.length === 1 && tags[0] === 'spacer') {
+          return '<div class="answer-line">' + escapeHtml(words.join(' ')) + '</div>';
+        }
+        return '<div class="answer-line">' + buildWordMarkup(words, tags) + '</div>';
+      }).join('');
+
+      return '<section class="chat-entry">' +
+        '<div class="message-row user"><div class="avatar user">You</div><article class="message-card"><p class="message-content">' + escapeHtml(q) + '</p></article></div>' +
+        '<div class="message-row bot">' + botAvatarHtml + '<article class="message-card"><div class="bot-answer">' + answerHtml + '</div></article></div>' +
+        '</section>';
+    }).join('');
+  }
+
+  function renderChats(chats, activeChatId) {
+    return chats.map(function (chat) {
+      const count = chat.history.length;
+      const label = count === 1 ? 'message' : 'messages';
+      return '<a class="chat-link' + (chat.id === activeChatId ? ' active' : '') + '" href="/chat/' + encodeURIComponent(chat.id) + '" data-chat-id="' + escapeHtml(chat.id) + '">' +
+        '<strong>' + escapeHtml(chat.title) + '</strong>' +
+        '<span>' + count + ' ' + label + '</span>' +
+        '</a>';
+    }).join('');
+  }
+
+  function bindTooltips() {
+    document.querySelectorAll('.word-token').forEach(bindTooltip);
+  }
+
+  function animateScrollToBottom(element, duration) {
+    const startTop = element.scrollTop;
+    const targetTop = element.scrollHeight - element.clientHeight;
+    const distance = targetTop - startTop;
+
+    if (distance <= 0) {
+      element.scrollTop = targetTop;
+      return;
+    }
+
+    const startTime = performance.now();
+
+    function step(now) {
+      const elapsed = now - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+
+      element.scrollTop = startTop + (distance * eased);
+
+      if (progress < 1) {
+        window.requestAnimationFrame(step);
+      }
+    }
+
+    window.requestAnimationFrame(step);
+  }
+
+  function scrollChatToBottom() {
+    const chatBody = document.getElementById('chat-body');
+    if (chatBody) {
+      animateScrollToBottom(chatBody, 140);
+    }
+  }
+
+  function applyState(nextState, updateUrl) {
+    appState = nextState;
+    document.getElementById('chat-list').innerHTML = renderChats(nextState.chats, nextState.active_chat_id);
+    document.getElementById('chat-body').innerHTML = renderHistory(nextState.history);
+    document.getElementById('active-chat-title').textContent = nextState.active_chat.title;
+    document.getElementById('chat-id-input').value = nextState.active_chat_id;
+    if (updateUrl) {
+      const nextUrl = nextState.active_chat_id ? '/?chat=' + encodeURIComponent(nextState.active_chat_id) : '/';
+      window.history.pushState({ chatId: nextState.active_chat_id }, '', nextUrl);
+    }
+    bindTooltips();
+    scrollChatToBottom();
+    closeSidebarOnMobile();
+  }
+
+  async function requestState(url, options) {
+    const response = await fetch(url, {
+      headers: { 'X-Requested-With': 'XMLHttpRequest' },
+      ...options
+    });
+    if (!response.ok) {
+      throw new Error('Request failed');
+    }
+    return response.json();
+  }
+
+  function bindTooltip(token) {
+    token.addEventListener('mouseenter', function () {
+      const targetOffsets = token.dataset.highlightTarget;
+      const baseIndex = Number(token.dataset.wordIndex);
+      const line = token.closest('.answer-line');
+      const highlightedTokens = new Map();
+      if (targetOffsets && !Number.isNaN(baseIndex)) {
+        const lineTokens = line ? Array.from(line.querySelectorAll('[data-word-index]')) : [];
+        const lineIndexes = lineTokens.map(function (lineToken) {
+          return Number(lineToken.dataset.wordIndex);
+        }).filter(function (index) {
+          return !Number.isNaN(index);
+        });
+        const minIndex = lineIndexes.length ? Math.min.apply(null, lineIndexes) : baseIndex;
+        const maxIndex = lineIndexes.length ? Math.max.apply(null, lineIndexes) : baseIndex;
+        targetOffsets.split(',').map(function (offsetText) {
+          const rawOffset = offsetText.trim();
+          const isAttention = rawOffset.endsWith('!');
+          const cleanedOffset = isAttention ? rawOffset.slice(0, -1) : rawOffset;
+          const lowerOffset = cleanedOffset.toLowerCase();
+          let offset = Number(cleanedOffset);
+          let mode = 'numeric';
+          if (lowerOffset === '+all' || lowerOffset === '-all') {
+            mode = 'all';
+            offset = lowerOffset[0] === '+' ? 1 : -1;
+          }
+          return {
+            isAttention: isAttention,
+            mode: mode,
+            offset: offset
+          };
+        }).filter(function (entry) {
+          return !Number.isNaN(entry.offset) && entry.offset !== 0;
+        }).forEach(function (entry) {
+          const step = entry.offset > 0 ? 1 : -1;
+          const startIndex = baseIndex + step;
+          const endIndex = entry.mode === 'all' ? (step > 0 ? maxIndex : minIndex) : baseIndex + entry.offset;
+          for (let targetIndex = startIndex; step > 0 ? targetIndex <= endIndex : targetIndex >= endIndex; targetIndex += step) {
+            const target = line ? line.querySelector('[data-word-index="' + targetIndex + '"]') : null;
+            if (target) {
+              const previousVariant = highlightedTokens.get(targetIndex);
+              const variant = entry.isAttention ? 'attention' : 'default';
+              highlightedTokens.set(
+                targetIndex,
+                previousVariant === 'attention' ? 'attention' : variant
+              );
+            }
+          }
+        });
+      }
+      if (line && highlightedTokens.size > 0) {
+        const lineRect = line.getBoundingClientRect();
+        const groupedHighlights = [];
+        Array.from(highlightedTokens.entries()).sort(function (a, b) {
+          return a[0] - b[0];
+        }).forEach(function (entry) {
+          const tokenIndex = entry[0];
+          const variant = entry[1];
+          const target = line.querySelector('[data-word-index="' + tokenIndex + '"]');
+          if (!target) return;
+          const currentGroup = groupedHighlights[groupedHighlights.length - 1];
+          if (currentGroup && currentGroup.variant === variant && currentGroup.lastIndex + 1 === tokenIndex) {
+            currentGroup.tokens.push(target);
+            currentGroup.lastIndex = tokenIndex;
+          } else {
+            groupedHighlights.push({
+              variant: variant,
+              lastIndex: tokenIndex,
+              tokens: [target]
+            });
+          }
+        });
+
+        groupedHighlights.forEach(function (group) {
+          const tokenRects = group.tokens.map(function (highlightToken) {
+            return highlightToken.getBoundingClientRect();
+          });
+          const left = Math.min.apply(null, tokenRects.map(function (rect) { return rect.left; })) - lineRect.left;
+          const right = Math.max.apply(null, tokenRects.map(function (rect) { return rect.right; })) - lineRect.left;
+          const top = Math.min.apply(null, tokenRects.map(function (rect) { return rect.top; })) - lineRect.top;
+          const bottom = Math.max.apply(null, tokenRects.map(function (rect) { return rect.bottom; })) - lineRect.top;
+          const highlight = document.createElement('span');
+          highlight.className = 'highlight-range' + (group.variant === 'attention' ? ' highlight-range-attention' : '');
+          highlight.style.left = left + 'px';
+          highlight.style.top = top + 'px';
+          highlight.style.width = (right - left) + 'px';
+          highlight.style.height = (bottom - top) + 'px';
+          line.insertBefore(highlight, line.firstChild);
+        });
+      }
+    });
+
+    token.addEventListener('mouseleave', function () {
+      const line = token.closest('.answer-line');
+      if (!line) return;
+      line.querySelectorAll('.highlight-range').forEach(function (highlight) {
+        highlight.remove();
+      });
+    });
+  }
+
+  document.getElementById('new-chat-form').addEventListener('submit', async function (event) {
+    event.preventDefault();
+    const state = await requestState('/chats/new', { method: 'POST' });
+    applyState(state, true);
+    document.getElementById('question-input').focus();
+  });
+
+  document.getElementById('chat-form').addEventListener('submit', async function (event) {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const formData = new FormData(form);
+    try {
+      const state = await requestState('/ask', { method: 'POST', body: formData });
+      applyState(state, true);
+      document.getElementById('question-input').value = '';
+    } catch (error) {
+      const chatBody = document.getElementById('chat-body');
+      if (chatBody) {
+        chatBody.insertAdjacentHTML('beforeend', '<section class="chat-entry"><div class="message-row bot">' + botAvatarHtml + '<article class="message-card"><p class="message-content">Something went wrong displaying that answer. Please refresh and try again.</p></article></div></section>');
+        scrollChatToBottom();
+      }
+    }
+    document.getElementById('question-input').focus();
+  });
+
+  document.getElementById('chat-list').addEventListener('click', async function (event) {
+    const link = event.target.closest('[data-chat-id]');
+    if (!link) return;
+    event.preventDefault();
+    const state = await requestState('/chat/' + encodeURIComponent(link.dataset.chatId), { method: 'GET' });
+    applyState(state, true);
+  });
+
+  window.addEventListener('popstate', async function () {
+    const url = new URL(window.location.href);
+    const chatId = url.searchParams.get('chat');
+    const targetUrl = chatId ? '/chat/' + encodeURIComponent(chatId) : '/';
+    const state = await requestState(targetUrl, { method: 'GET' });
+    applyState(state, false);
+  });
+
+  if (mobileMenuButton) {
+    mobileMenuButton.addEventListener('click', function () {
+      setSidebarOpen(!document.body.classList.contains('sidebar-open'));
+    });
+  }
+
+  if (sidebarBackdrop) {
+    sidebarBackdrop.addEventListener('click', function () {
+      setSidebarOpen(false);
+    });
+  }
+
+  mobileSidebarQuery.addEventListener('change', function (event) {
+    if (!event.matches) {
+      setSidebarOpen(false);
+    }
+  });
+
+  window.addEventListener('keydown', function (event) {
+    if (event.key === 'Escape') {
+      setSidebarOpen(false);
+    }
+  });
+
+  window.addEventListener('resize', syncAppHeight);
+  window.addEventListener('orientationchange', syncAppHeight);
+
+  syncAppHeight();
+  bindTooltips();
+  scrollChatToBottom();
+})();
+</script>
+</body>
+</html>
